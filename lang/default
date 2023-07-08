@@ -1,22 +1,3 @@
 #!/usr/bin/env bash
-LABEL_BACKTITLE="Assistente para adição de funções e recursos"
-LABEL_WIZARD_ADD_FUNC_RES="$LABEL_BACKTITLE"
-LABEL_WIZARD_START_ALERT="Antes de continuar, verifique se estas tarefas foram concluídas:"
-LABEL_WIZARD_START_ALERT_BACK="Antes de começar"
-LABEL_WIZARD_START_ALERT_ADMIN="A conta de administrador (root) tem uma senha forte"
-LABEL_WIZARD_START_ALERT_STATIC="Configurações de rede (com endereços IP estáticos) foram definidas"
-LABEL_WIZARD_SERVER_FUNCTION_TITLE="Funções do servidor"
-LABEL_WIZARD_SERVER_FUNCTION_DESC="Selecione uma ou mais opções para instalar no servidor atual:"
-LABEL_NETWORK_CONFIG="Configuração de rede"
-LABEL_NETWORK_INTERFACE="Interface de rede"
-LABEL_NETWORK_INTERFACE_CHOICE="Escolha a interface de rede que será utilizada:"
-LABEL_IPV4_CHOICE="Insira o endereço IPv4 a ser utilizado por este servidor:"
-LABEL_IPV6_CHOICE="Insira o endereço IPv6 a ser utilizado por este servidor:"
-LABEL_IPV4_MASK_CHOICE="Insira a máscara de rede do endereço IPv4:"
-LABEL_IPV6_MASK_CHOICE="Insira a máscara de rede do endereço IPv6:"
-LABEL_IPV4_GATEWAY_CHOICE="Insira o endereço do gateway IPv4:"
-LABEL_IPV6_GATEWAY_CHOICE="Insira o endereço do gateway IPv6:"
-LABEL_STATIC_IP="Registrar os endereços IP como estáticos em /etc/network/interfaces ?"
-LABEL_SHOW_CONFIRM_ADDRESS="Essas são as informações que serão utilizadas para configurar seu servidor:"
 
-echo "lang default OK"
+. lang/pt-BR
