@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+
+. lib/include_default
+
+server_functions_list=$(ls server_functions)
+server_functions_choice=()
+
+for sf in $server_functions_list; do
+    description=$(cat server_functions/$sf/description)
+    server_functions_choice+=("$sf")
+    server_functions_choice+=("$description")
+done
+whiptail --backtitle "$LABEL_BACKTITLE" \
+         --title "$LABEL_WIZARD_SERVER_FUNCTION_TITLE" \
+         --menu "\n$LABEL_WIZARD_SERVER_FUNCTION_DESC" 20 60 7 "${server_functions_choice[@]}"
