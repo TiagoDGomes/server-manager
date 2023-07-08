@@ -2,3 +2,10 @@
 
 . lib/include_default
 
+SAMBA_INSTALLED=$(systemctl status samba-ad-dc | grep "slice" | wc -c)
+SAMBA_AD_DC_ACTIVE=$(systemctl status samba-ad-dc | grep "PID" | wc -c)
+
+if [[ "$SAMBA_INSTALLED" != "0" &&  "$SAMBA_AD_DC_ACTIVE" != 0 ]]; then
+    whiptail --msgbox "\n$LABEL_ALREADY_INSTALLED" --title "$LABEL_ACTIVE_DIRECTORY" 10 40 3
+    exit 1
+fi

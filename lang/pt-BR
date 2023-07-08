@@ -19,7 +19,7 @@ LABEL_IPV4_GATEWAY_CHOICE="Insira o endereço do gateway IPv4:"
 LABEL_IPV6_GATEWAY_CHOICE="Insira o endereço do gateway IPv6:"
 LABEL_STATIC_IP="Registrar os endereços IP como estáticos em /etc/network/interfaces ?"
 LABEL_SHOW_CONFIRM_ADDRESS="Essas são as informações que serão utilizadas para configurar seu servidor:"
-
+LABEL_ALREADY_INSTALLED="O recurso já está instalado."
 
 # AD DS
 LABEL_NETBIOS_CHOICE="Verificar o nome NetBIOS atribuído ao domínio e alterá-lo se necessário:"
