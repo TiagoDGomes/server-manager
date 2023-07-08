@@ -1,0 +1,28 @@
+#!/usr/bin/env bash
+
+. lang/default
+
+interface_choice=()
+INTERFACES=$(ip link | egrep "BROADCAST|MULTICAST|1500" | cut -d ":" -f2)
+for n in $INTERFACES; do
+   mac=$(cat /sys/class/net/$n/address)
+   device_id=$(cat /sys/class/net/$n/device/uevent | grep "PCI_SUBSYS_ID" | cut -d "=" -f 2 | cut -d ":" -f 2)
+   device_name=$(lspci -nnvmm | egrep -A 6 -B 1 -i 'network|ethernet' | grep -i "SDevice" | grep -i "$device_id" | cut -d ":" -f 2)
+   device_name=`echo $device_name | sed 's/ *$//g'`
+   interface_choice+=("$n")
+   interface_choice+=("[$mac] $device_name")   
+done 
+INTERFACE=$(whiptail --backtitle "$LABEL_NETWORK_CONFIG" \
+               --title "$LABEL_NETWORK_INTERFACE" \
+               --menu "\n$LABEL_NETWORK_INTERFACE_CHOICE\n" 14 78 5 \
+               "${interface_choice[@]}"  3>&1 1>&2 2>&3)
+exitstatus=$?
+if [ $exitstatus != 0 ]; then         
+   return 1
+fi
+IPV4_ADDRESS="$(ip addr show $INTERFACE | grep "inet " | cut -d " " -f 6 | cut -d "/" -f 1)"
+IPV4_ADDRESS_MASK="$(ip addr show $INTERFACE | grep "inet " | cut -d " " -f 6 | cut -d "/" -f 2)"
+IPV4_GATEWAY="$(ip route get 8.8.8.8 | grep "via" | cut -d " " -f 3)"
+IPV6_ADDRESS="$(ip addr show $INTERFACE | grep "inet6 " | grep "global" | cut -d " " -f 6 | cut -d "/" -f 1)"
+IPV6_ADDRESS_MASK="$(ip addr show $INTERFACE | grep "inet6 " | grep "global" | cut -d " " -f 6 | cut -d "/" -f 2)"
+IPV6_GATEWAY="$(ip -6 route get 2001:4860:4860::8888 | grep "via" | cut -d " " -f 5)"

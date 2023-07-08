@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+
+. lib/select_interface
+
+echo "IPv4: $IPV4_ADDRESS"
