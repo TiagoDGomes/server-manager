@@ -10,6 +10,19 @@ for sf in $server_functions_list; do
     server_functions_choice+=("$sf")
     server_functions_choice+=("$description")
 done
-whiptail --backtitle "$LABEL_BACKTITLE" \
+SERVER_FUNCTION=$(whiptail --backtitle "$LABEL_BACKTITLE" \
          --title "$LABEL_WIZARD_SERVER_FUNCTION_TITLE" \
-         --menu "\n$LABEL_WIZARD_SERVER_FUNCTION_DESC" 20 60 7 "${server_functions_choice[@]}"
+         --menu "\n$LABEL_WIZARD_SERVER_FUNCTION_DESC" 20 60 7 "${server_functions_choice[@]}"  3>&1 1>&2 2>&3)
+
+if [ ! -z "$SERVER_FUNCTION" ]; then
+    steps=$(ls "server_functions/$SERVER_FUNCTION/steps")
+    for s in $steps; do
+        . server_functions/$SERVER_FUNCTION/steps/$s
+    done
+fi
+# echo "==========printenv"
+# printenv 
+# echo "==========env"
+# env
+# echo "==========set"
+set 
