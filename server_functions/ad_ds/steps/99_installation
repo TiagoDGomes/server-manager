@@ -1,3 +1,459 @@
 #!/usr/bin/env bash
 
 . lib/include_default
+
+requirements="samba winbind smbclient msitools"
+
+shw_info "- Atualizando pacotes..."
+apt-get update
+shw_info "- Fazendo upgrade..."
+apt-get upgrade -y
+shw_info "- Instalando recursos..."
+apt-get install -y $requirements 
+shw_info "- Interrompendo serviços do SAMBA..."
+systemctl stop smbd winbind
+shw_info "- Desabilitando serviços do SAMBA..."    
+systemctl disable smdb 
+
+# ===========================================================
+
+shw_info "- Verificando processos ativos do Samba..."
+samba_running=$(ps ax | egrep "samba|smbd|winbindd" | grep -v "grep" | wc -c)
+if [[ ! $samba_running == 0 ]]; then
+    systemctl stop smbd winbindd samba
+fi
+echo "- Removendo smb.conf existente..."
+#echo "- Remove the existing smb.conf file. To list the path to the file:"
+samba_confs=$(/usr/sbin/smbd  -b | grep "CONFIGFILE" | cut -d":" -f 2)
+
+for cnf in $samba_confs
+do
+    echo "  - $cnf"
+    rm -rf "$cnf"
+    rm "$cnf"   
+done  
+
+# ===========================================================
+
+shw_info "- Definindo hostname..."
+echo "127.0.0.1    localhost"  > /etc/hosts
+echo "$IPV4_ADDRESS $DOMAIN_CONTROLLER_NAME.$DNS_REALM $DOMAIN_CONTROLLER_NAME"  >> /etc/hosts
+echo "::1     localhost ip6-localhost ip6-loopback"  >> /etc/hosts
+echo "ff02::1 ip6-allnodes"  >> /etc/hosts
+echo "ff02::2 ip6-allrouters"  >> /etc/hosts
+if [[ "$IPV6_OPTION" == "1" ]] ; then
+    echo "$IPV6_ADDRESS $DOMAIN_CONTROLLER_NAME.$DNS_REALM $DOMAIN_CONTROLLER_NAME" >> /etc/hosts
+fi
+hostnamectl set-hostname $DOMAIN_CONTROLLER_NAME
+
+# ===========================================================
+
+shw_info "- Removendo pacotes que causam problemas..."
+#echo "- Disable tools, such as resolvconf, that automatically update your /etc/resolv.conf DNS resolver configuration file. AD DCs and domain members must use an DNS server that is able to resolve the AD DNS zones."
+apt-get purge -y resolvconf    
+
+
+# ===========================================================
+
+
+if [[ "$JOIN_DOMAIN" == "0" ]] ; then
+    # ad_ds_clear_databases
+        shw_info "- Removendo todos os arquivos de database do Samba..."
+        #echo "- Remove all Samba database files, such as *.tdb and *.ldb files. To list the folders containing Samba databases:"
+        samba_dbs=$(/usr/sbin/smbd -b | egrep "LOCKDIR|STATEDIR|CACHEDIR|PRIVATE_DIR" | cut -d":" -f 2)
+        for db in $samba_dbs
+        do
+            echo "  - $db"
+            rm -rf "$db"
+            mkdir -p $db
+        done
+
+
+    # kerberos_clear_config
+        shw_info "- Removendo krb5.conf..."
+        #echo "- Remove an existing /etc/krb5.conf file:"
+        rm /etc/krb5.conf 
+
+
+    # ad_ds_dns_forwarders
+        shw_info "- Configurando DNS forwarders..."
+        echo "search $DNS_REALM" > /etc/resolv.conf
+        echo "domain $DNS_REALM" >> /etc/resolv.conf
+        for DNS_SERVER in $DNS_FORWARDER;
+        do
+            echo "  -- $DNS_SERVER "
+            echo -e "nameserver $DNS_SERVER" >> /etc/resolv.conf
+        done  
+
+
+    # ad_ds_provision 
+        shw_info "- Fazendo provisão do domínio (isto pode demorar um pouco)..."
+        samba-tool domain provision --server-role=dc --use-rfc2307 --realm=$DNS_REALM --domain=$NETBIOS_NAME --adminpass=$ADMINPASS --dns-backend=SAMBA_INTERNAL #--dns-backend=BIND9_DLZ
+        shw_info "- A provisão do domínio foi executada."
+
+    # kerberos_configure  
+        #echo "- In an AD, Kerberos is used to authenticate users, machines, and services."
+        #echo "- During the provisioning, Samba created a Kerberos configuration file for your DC. Copy this file to your operating system's Kerberos configuration. For example:"
+        shw_info "- Copiando arquivo krb5.conf gerado durante a provisão do domínio..."
+        private_dir=$(/usr/sbin/smbd -b | egrep "PRIVATE_DIR" | cut -d":" -f 2)
+        cp $private_dir/krb5.conf /etc/krb5.conf
+
+
+else
+    # ad_ds_join_dc
+        shw_info "- Definindo servidor DNS..."
+        echo -e "search $DNS_REALM \nnameserver $IP_ADDRESS_PDC_EMULATOR" > /etc/resolv.conf
+
+        shw_info "- Atualizando arquivos /etc/krb5.conf..."
+        echo -e "[libdefaults]\n   default_realm = ${DNS_REALM^^}\n   dns_lookup_realm = false\n   dns_lookup_kdc = true\n[realms]\n   ${DNS_REALM^^} = {\n       default_domain = $DNS_REALM\n   }\n[domain_realms]\n  $DOMAIN_CONTROLLER_NAME = $DNS_REALM" > /etc/krb5.conf
+
+        shw_info "- Adicionando controlador ao domínio (isto pode levar um tempo)..."      
+        echo "$ADMINPASS" | samba-tool domain join $DNS_REALM DC -U"$NETBIOS_NAME\\$DOMAIN_ADMIN_USER" --dns-backend=SAMBA_INTERNAL --option='idmap_ldb:use rfc2307 = yes'
+
+
+fi
+
+
+if [[ ! -f "/etc/samba/smb.conf" ]] ; then
+    shw_err "- Falha ao se tornar controlador de domínio. O arquivo smb.conf não foi gerado." 
+    exit 1
+fi
+
+
+
+
+# ===========================================================
+# ad_ds_install_rsync
+
+    shw_info "- Instalando sincronizador SYSVOL..."
+   apt-get install -y rsync
+   SYSVOL_SECRET_PASS="$(echo \"${DNS_REALM^^}\" | md5sum | head -c 32; echo;)"
+   RSYNC_SECRET_FILE="/etc/samba/sysvol-sync.secret"
+   echo "$SYSVOL_SECRET_PASS" > $RSYNC_SECRET_FILE
+   chmod 600 $RSYNC_SECRET_FILE
+
+   RSYNC_SECRET_FILE_PDC="/etc/samba/sysvol-sync-pdc.secret"
+   echo "sysvol-replication:$SYSVOL_SECRET_PASS" > $RSYNC_SECRET_FILE_PDC
+   chmod 600 $RSYNC_SECRET_FILE_PDC
+
+   shw_info "- Configurando rsync daemon..."
+   SYSVOL_SYNC_CONF="/etc/samba/sysvol-sync.conf"
+   SYSVOL_PATH="$(/usr/sbin/smbd -b | grep "STATEDIR" | cut -d ":" -f 2 | cut -f 2 -d " ")/sysvol/"   
+   echo "[sysvol]" > $SYSVOL_SYNC_CONF
+   echo "path = $SYSVOL_PATH" >> $SYSVOL_SYNC_CONF
+   echo "comment = Samba Sysvol Share" >> $SYSVOL_SYNC_CONF
+   echo "uid = root" >> $SYSVOL_SYNC_CONF
+   echo "gid = root" >> $SYSVOL_SYNC_CONF
+   echo "read only = yes" >> $SYSVOL_SYNC_CONF
+   echo "auth users = sysvol-replication" >> $SYSVOL_SYNC_CONF
+   echo "secrets file = $RSYNC_SECRET_FILE_PDC" >> $SYSVOL_SYNC_CONF
+
+   shw_info "- Criando serviço SYSVOL Sync Files Listener..."
+   SERVICE_SYSVOL_PDC_SYNC_FILE="/etc/systemd/system/sysvol-sync-pdc.service" 
+   echo "[Unit]" > $SERVICE_SYSVOL_PDC_SYNC_FILE
+   echo "Description=SYSVOL Sync Files Listener (PDC Emulator)" >> $SERVICE_SYSVOL_PDC_SYNC_FILE
+   echo "[Service]" >> $SERVICE_SYSVOL_PDC_SYNC_FILE
+   echo "KillMode=control-group" >> $SERVICE_SYSVOL_PDC_SYNC_FILE
+   echo "TimeoutSec=infinity" >> $SERVICE_SYSVOL_PDC_SYNC_FILE
+   echo "ExecStart=/usr/bin/rsync --daemon --verbose --no-detach --config $SYSVOL_SYNC_CONF" >> $SERVICE_SYSVOL_PDC_SYNC_FILE
+   echo "[Install]" >> $SERVICE_SYSVOL_PDC_SYNC_FILE
+   echo "WantedBy=multi-user.target" >> $SERVICE_SYSVOL_PDC_SYNC_FILE
+   shw_info "- Recarregando systemctl..."
+   systemctl daemon-reload
+   shw_info "- Habilitando sysvol-sync-pdc..."
+   systemctl enable sysvol-sync-pdc.service
+   shw_info "- Iniciando sysvol-sync-pdc..."
+   systemctl start sysvol-sync-pdc
+
+   shw_info "- Criando comando de replicação SYSVOL..."
+   COMMAND_REPLICATION="/usr/sbin/sysvol-get-repl"
+   echo '#!/bin/bash'                                       > $COMMAND_REPLICATION
+   echo 'count_sync=0'                                     >> $COMMAND_REPLICATION
+   echo 'while :'                                          >> $COMMAND_REPLICATION
+   echo 'do'                                               >> $COMMAND_REPLICATION
+   echo '  PDC=$(samba-tool fsmo show | grep "PdcEmulationMasterRole" | cut -d "," -f 2 | cut -d "=" -f 2)' >> $COMMAND_REPLICATION   
+   echo '  IS_PDC=$(cat /etc/hosts | grep "$PDC" | wc -m)' >> $COMMAND_REPLICATION 
+   echo '  if [[ "$IS_PDC" == "0" ]]; then'                >> $COMMAND_REPLICATION
+   echo '       echo "Executing sync: $PDC" '              >> $COMMAND_REPLICATION
+   echo "       /usr/bin/rsync --xattrs --acls --archive --compress --delete-after --password-file=$RSYNC_SECRET_FILE rsync://sysvol-replication@\$PDC/sysvol/ $SYSVOL_PATH" >> $COMMAND_REPLICATION
+   echo '       echo "Sync completed." '                   >> $COMMAND_REPLICATION   
+   echo '       if [ $count_sync -gt 240 ] || [ $count_sync -eq 0 ]; then' >> $COMMAND_REPLICATION
+   echo '             samba-tool ntacl sysvolreset'        >> $COMMAND_REPLICATION
+   echo '             count_sync=0 '                       >> $COMMAND_REPLICATION
+   echo '       fi ' >> $COMMAND_REPLICATION
+   echo '       count_sync=$((count_sync+1)) '             >> $COMMAND_REPLICATION
+   echo '  fi'                                             >> $COMMAND_REPLICATION
+   echo '  sleep 60'                                       >> $COMMAND_REPLICATION
+   echo 'done'                                             >> $COMMAND_REPLICATION
+   chmod +x $COMMAND_REPLICATION
+
+
+   
+   shw_info "- Criando serviço SYSVOL Sync Files..."
+   SERVICE_SYSVOL_SYNC_FILE="/etc/systemd/system/sysvol-sync.service" 
+   echo "[Unit]" > $SERVICE_SYSVOL_SYNC_FILE
+   echo "Description=SYSVOL Sync Files" >> $SERVICE_SYSVOL_SYNC_FILE
+   echo "[Service]" >> $SERVICE_SYSVOL_SYNC_FILE
+   echo "TimeoutSec=infinity" >> $SERVICE_SYSVOL_SYNC_FILE
+   echo "KillMode=control-group" >> $SERVICE_SYSVOL_SYNC_FILE
+   echo "ExecStart=$COMMAND_REPLICATION" >> $SERVICE_SYSVOL_SYNC_FILE
+   echo "[Install]" >> $SERVICE_SYSVOL_SYNC_FILE
+   echo "WantedBy=multi-user.target" >> $SERVICE_SYSVOL_SYNC_FILE
+   shw_info "- Recarregando systemctl..."
+   systemctl daemon-reload
+   shw_info "- Habilitando sysvol-sync..."
+   systemctl enable sysvol-sync.service
+   shw_info "- Iniciando sysvol-sync..."
+   systemctl start sysvol-sync
+   shw_info "- Executando samba-tool ntacl sysvolreset..."
+   samba-tool ntacl sysvolreset
+
+
+
+# ===========================================================
+# ad_ds_configure_folders
+    shw_info "- Criando pasta usershares..."
+    mkdir -p /var/lib/samba/usershares/
+    shw_info "- Aplicando permissões para usershares..."
+    chmod -R 1644 /var/lib/samba/usershares/
+
+
+
+
+# ===========================================================
+# ad_ds_configure_boot
+    shw_info "- Habilitando a inicialização no boot..."
+    systemctl unmask samba-ad-dc   
+    systemctl enable samba-ad-dc
+
+
+
+
+
+# ===========================================================
+# ad_ds_restart
+
+function ad_ds_restart {
+    shw_info "- Iniciando o Samba..."
+    systemctl restart samba-ad-dc
+    shw_info "- Aguardando 5 segundos..."
+    sleep 5
+    #/etc/init.d/samba-ad-dc status
+}
+
+ad_ds_restart
+
+
+if [[ "$JOIN_DOMAIN" == "0" ]] ; then
+
+    # ad_ds_configure_permissions
+        shw_info "- Definindo permissões..."
+        echo "$ADMINPASS" | net rpc rights grant "$NETBIOS_NAME\Domain Admins" SeDiskOperatorPrivilege -U administrator
+        samba-tool domain passwordsettings set --max-pwd-age=0
+        samba-tool domain passwordsettings set --min-pwd-age=0
+        samba-tool domain passwordsettings set --complexity=off
+        samba-tool domain passwordsettings show
+
+
+
+    # ad_ds_install_policies
+        shw_info "- Instalando políticas de grupo do Samba..."
+        echo "$ADMINPASS" | samba-tool gpo admxload -U Administrator 
+
+        shw_info "- Fazendo download das políticas de grupo do Windows 10..."
+        wget -4 "https://download.microsoft.com/download/3/0/6/30680643-987a-450c-b906-a455fff4aee8/Administrative%20Templates%20(.admx)%20for%20Windows%2010%20October%202020%20Update.msi" -O /tmp/admx.msi   
+        mkdir -p /tmp/admxwin10
+        shw_info "- Extraindo..."
+        msiextract /tmp/admx.msi -C /tmp/admxwin10
+        shw_info "- Instalando..."
+        echo "$ADMINPASS" | samba-tool gpo admxload -U Administrator --admx-dir="/tmp/admxwin10/Program Files/Microsoft Group Policy/Windows 10 October 2020 Update (20H2)/PolicyDefinitions/"
+        rm -rf /tmp/admxwin10
+        rm /tmp/admx.msi
+
+        shw_info "- Instalando políticas de grupo do Firefox..."
+        apt-get install -y unzip
+        wget "https://github.com/mozilla/policy-templates/releases/download/v3.9/policy_templates_v3.9.zip" -O /tmp/firefoxadmx.zip
+        mkdir -p /tmp/firefoxadmx
+        unzip /tmp/firefoxadmx.zip -d /tmp/firefoxadmx
+        echo "$ADMINPASS" | samba-tool gpo admxload -UAdministrator --admx-dir=/tmp/firefoxadmx/windows/
+        rm -rf /tmp/firefoxadmx
+        rm -rf /tmp/firefoxadmx.zip
+
+        shw_info "- Instalando políticas de grupo do Chrome/Chromium..."
+        wget -4 "https://dl.google.com/dl/edgedl/chrome/policy/policy_templates.zip" -O /tmp/chromeadmx.zip
+        mkdir -p /tmp/chromeadmx
+        unzip /tmp/chromeadmx.zip -d /tmp/chromeadmx
+        echo "$ADMINPASS" | samba-tool gpo admxload -UAdministrator --admx-dir=/tmp/chromeadmx/windows/admx/pt-BR/
+        rm -rf /tmp/chromeadmx
+        rm -rf /tmp/chromeadmx.zip
+
+    
+fi
+
+
+# ===========================================================
+# ad_ds_set_motd
+
+   shw_info "- Criando mensagem motd: ad-ds..."
+   AD_DS_MOTD="/etc/update-motd.d/20-ad-ds"
+   echo "#!/bin/sh" > $AD_DS_MOTD
+   echo "echo '════════════════════════════════════'" >> $AD_DS_MOTD
+   echo "echo 'Active Directory - Domain Controller'" >> $AD_DS_MOTD
+   echo "echo '════════════════════════════════════'" >> $AD_DS_MOTD
+   echo "samba-tool domain info ::1" >> $AD_DS_MOTD
+   echo "echo ''" >> $AD_DS_MOTD
+   echo "" > /etc/motd
+   chmod +x $AD_DS_MOTD
+
+
+
+
+# ntpd_install_resources
+ shw_info "- Instalando recursos do NTP Server..."
+    apt-get install -y ntp # >> /dev/null 2>&1
+    ntp_signd_dir="$(/usr/sbin/smbd -b | egrep "STATEDIR" | cut -d":" -f 2 | cut -f 2 -d " ")/ntp_signd"
+    chown root:ntp "$ntp_signd_dir/"
+    chmod 750 "$ntp_signd_dir/"
+
+    cat > /etc/ntp.conf << EOF  
+# Local clock. Note that is not the "localhost" address!
+server 127.127.1.0
+fudge  127.127.1.0 stratum 10
+
+# Where to retrieve the time from
+server a.ntp.br     iburst prefer
+server b.ntp.br     iburst prefer
+server 0.pool.ntp.org     iburst prefer
+server 1.pool.ntp.org     iburst prefer
+server 2.pool.ntp.org     iburst prefer
+
+driftfile       /var/lib/ntp/ntp.drift
+logfile         /var/log/ntp
+ntpsigndsocket  $ntp_signd_dir/
+
+# Access control
+# Default restriction: Allow clients only to query the time
+restrict default kod nomodify notrap nopeer limited mssntp
+
+# No restrictions for "localhost"
+restrict 127.0.0.1
+
+# Enable the time sources to only provide time to this host
+restrict a.ntp.br   mask 255.255.255.255    nomodify notrap nopeer noquery
+restrict b.ntp.br   mask 255.255.255.255    nomodify notrap nopeer noquery
+restrict 0.pool.ntp.org   mask 255.255.255.255    nomodify notrap nopeer noquery
+restrict 1.pool.ntp.org   mask 255.255.255.255    nomodify notrap nopeer noquery
+restrict 2.pool.ntp.org   mask 255.255.255.255    nomodify notrap nopeer noquery
+tinker panic 0
+EOF
+   chcon -u system_u -t ntpd_t "$ntp_signd_dir/"
+   systemctl restart ntp
+
+
+# ===========================================================
+if [[ $DNS_BACKEND == "BIND9_DLZ" ]]; then
+    AD_DS_INSTALLED=$(cat /etc/samba/smb.conf | grep "server role" | grep "domain controller" | wc -c)
+    #   bind_dns_install_resources
+        shw_info "- Instalando recursos do BIND DNS..."
+        apt-get install -y bind9 bind9utils # >> /dev/null 2>&1
+
+    #   bind_dns_configure_default
+        shw_info "- Definindo servidor DNS para localhost..."
+        echo -e "search $DNS_REALM \nnameserver 127.0.0.1" > /etc/resolv.conf
+        if [[ ! -f "/etc/default/bind9" ]]; then
+            echo 'OPTIONS="-u bind"' > /etc/default/bind9
+        fi 
+        if [[ "$IPV6_OPTION" == "0" ]]; then
+            sed -i 's/-u bind"/-u bind -4"/g' /etc/default/bind9
+            NAMED_CONF_OPTIONS_IPV6="listen-on-v6 { none; };"
+        else
+            NAMED_CONF_OPTIONS_IPV6="listen-on-v6 { any; };"
+        fi
+        DNS_BIND_LIST=""
+        for DNS_SERVER in $DNS_FORWARDER;
+        do
+            if [[ ! -z "$DNS_SERVER" ]]; then
+                DNS_BIND_LIST="$DNS_BIND_LIST $DNS_SERVER ;"
+            fi
+        done 
+
+    
+    #  bind_dns_install_with_ad_ds
+        shw_info "- Interrompendo Samba AD DS..."
+        systemctl stop samba-ad-dc
+
+        shw_info "- Desativando Samba Internal..."
+        server_services="$(grep 'server services' /etc/samba/smb.conf | wc -c )"
+        if [[ "$server_services" == "0" ]]; then
+            result_server_services=$(sed -e "s/\[global\]/\[global\]\n\tserver services = -dns/" /etc/samba/smb.conf)
+            echo "$result_server_services" > /etc/samba/smb.conf
+        fi 
+            
+        shw_info "- Fazendo upgrade do Samba DNS para BIND9_DLZ..."
+        /usr/sbin/samba_upgradedns --dns-backend=BIND9_DLZ 
+
+        shw_info "- Criando arquivos para o serviço DNS com AD DS..."   
+        if [[ ! -f /etc/bind/named.conf.options.backup ]]; then
+            mv /etc/bind/named.conf.options /etc/bind/named.conf.options.backup
+        fi
+
+        binddns_dir=$(/usr/sbin/smbd -b | egrep "BINDDNS_DIR" | cut -d":" -f 2 | cut -d " " -f 2)
+        modules_dir=$(/usr/sbin/smbd -b | egrep "MODULESDIR" | cut -d":" -f 2 | cut -d " " -f 2)
+        BIND_VERSION=$(/usr/sbin/named -v | cut -d "-" -f 1 | cut -d " " -f 2 | cut -f 2 -d "." | cut -d " " -f 2)
+        
+        chmod 770 $binddns_dir
+        chown root:named $binddns_dir
+        chown root:bind $binddns_dir
+
+        shw_info "- DNS bind list : $DNS_BIND_LIST"
+
+        echo "
+            options {
+                    directory \"/var/cache/bind\";
+                    forwarders { $DNS_BIND_LIST };
+                    $NAMED_CONF_OPTIONS_IPV6 
+                    listen-on port 53 { any; };
+                    version \"Go Away 0.0.7\";
+                    notify no;
+                    empty-zones-enable no;
+                    auth-nxdomain yes;
+                    dnssec-validation no;
+                    minimal-responses yes;
+                    recursion yes;
+                    allow-transfer { none; };
+                    allow-query { any ;   };
+                    allow-query-cache { any ; };
+                    allow-recursion { any ; };
+                    tkey-gssapi-keytab \"$binddns_dir/dns.keytab\";
+            };" > /etc/bind/named.conf.options
+
+        echo "include \"$binddns_dir/named.conf\";" > /etc/bind/named.conf.local
+        
+        echo "
+            dlz \"AD DNS Zone\" {   
+                    database \"dlopen $modules_dir/bind9/dlz_bind9_$BIND_VERSION.so\";    
+            }; " > $binddns_dir/named.conf
+
+
+
+    #   bind_dns_restart
+        shw_info "- Reiniciando serviço DNS..."
+        systemctl restart bind9 # >> /dev/null 2>&1
+        /etc/init.d/named status
+
+        ad_ds_restart
+
+    #   bind_dns_set_motd 
+        shw_info "- Criando mensagem motd: bind9..."
+        BIND_DNS_MOTD="/etc/update-motd.d/21-bind"
+        echo "#!/bin/sh" > $BIND_DNS_MOTD
+        echo "echo '════════════════════════════════════'" >> $BIND_DNS_MOTD
+        echo "echo '             DNS Server             '" >> $BIND_DNS_MOTD
+        echo "echo '════════════════════════════════════'" >> $BIND_DNS_MOTD
+        echo "nslookup $DOMAIN_CONTROLLER_NAME" >> $BIND_DNS_MOTD
+        echo "echo ''" >> $BIND_DNS_MOTD
+        echo "" > /etc/motd
+        chmod +x $BIND_DNS_MOTD
+
+
+fi

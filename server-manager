@@ -20,6 +20,7 @@ SERVER_FUNCTION=$(whiptail --backtitle "$LABEL_BACKTITLE" \
 if [ ! -z "$SERVER_FUNCTION" ]; then
     steps=$(ls "server_functions/$SERVER_FUNCTION/steps")
     for s in $steps; do
+        shw_info " - $SERVER_FUNCTION: $s"    
         . server_functions/$SERVER_FUNCTION/steps/$s
     done
 fi

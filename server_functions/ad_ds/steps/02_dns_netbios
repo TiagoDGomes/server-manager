@@ -22,6 +22,8 @@ else
     exit 0
 fi
 # =================================================================
+DNS_FORWARDER=$(grep "nameserver" /etc/resolv.conf | sed  's/nameserver //g' )
+
 DNS_FORWARDER=$(whiptail --backtitle "$LABEL_BACKTITLE" \
                          --inputbox "\n$LABEL_DNS_FORWARDERS_CHOICE\n\n"  11 55 $DNS_FORWARDER \
                          --title "DNS_FORWARDER" 3>&1 1>&2 2>&3)

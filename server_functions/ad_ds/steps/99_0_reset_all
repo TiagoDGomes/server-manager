@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+
+. lib/include_default
+
+echo "- Removendo smb.conf existente..."
+#echo "- Remove the existing smb.conf file. To list the path to the file:"
+samba_confs=$(/usr/sbin/smbd  -b | grep "CONFIGFILE" | cut -d":" -f 2)
+
+for cnf in $samba_confs
+do
+    echo "  - $cnf"
+    rm -rf "$cnf"
+    rm "$cnf"   
+done  
+
+apt-get remove -y samba winbind smbclient msitools
