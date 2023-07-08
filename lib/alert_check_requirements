@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+
+. lib/include_default
+
+if (whiptail --title "$LABEL_WIZARD_ADD_FUNC_RES v$VERSION" --yesno \
+               "\n$LABEL_WIZARD_START_ALERT\n$LABEL_WIZARD_START_ALERT_2\n\
+               \n - $LABEL_WIZARD_START_ALERT_ADMIN;\
+               \n - $LABEL_WIZARD_START_ALERT_STATIC." 20 85 6 ); then
+    CONTINUE="1"
+else
+    return 1
+fi

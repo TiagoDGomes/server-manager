@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-. lang/default
+. lib/include_default
 
 IPV4_ADDRESS_TEST_GATEWAY="8.8.8.8"
 IPV6_ADDRESS_TEST_GATEWAY="2001:4860:4860::8888"

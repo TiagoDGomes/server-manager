@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 
+. lib/alert_check_requirements
 . lib/select_interface
 
 echo "IPv4: $IPV4_ADDRESS"
