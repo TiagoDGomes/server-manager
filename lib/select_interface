@@ -10,7 +10,6 @@ INTERFACES=$(ip link | egrep "BROADCAST|MULTICAST|1500" | cut -d ":" -f2)
 for n in $INTERFACES; do
    mac=$(cat /sys/class/net/$n/address)
    slot_name=$(cat /sys/class/net/$n/device/uevent | grep "PCI_SLOT_NAME" | cut -d "=" -f 2)
-   echo "slot name = $slot_name"
    device_name=$(lspci -s "$slot_name" | cut -d ":" -f 3)
    device_name=`echo $device_name | sed 's/ *$//g'`
    interface_choice+=("$n")
