@@ -9,18 +9,19 @@ interface_choice=()
 INTERFACES=$(ip link | egrep "BROADCAST|MULTICAST|1500" | cut -d ":" -f2)
 for n in $INTERFACES; do
    mac=$(cat /sys/class/net/$n/address)
-   slot_name=$(cat /sys/class/net/$n/device/uevent | grep "PCI_SLOT_NAME" | cut -d "=" -f 2 | cut -d ":" -f 2)
-   device_name=$(lspci -s "$slot_name" | cut -d ":" -f 2)
+   slot_name=$(cat /sys/class/net/$n/device/uevent | grep "PCI_SLOT_NAME" | cut -d "=" -f 2)
+   echo "slot name = $slot_name"
+   device_name=$(lspci -s "$slot_name" | cut -d ":" -f 3)
    device_name=`echo $device_name | sed 's/ *$//g'`
    interface_choice+=("$n")
-   interface_choice+=("[$mac] $device_name")   
-done 
+   interface_choice+=("[$mac] $device_name")
+done
 INTERFACE=$(whiptail --backtitle "$LABEL_NETWORK_CONFIG" \
                --title "$LABEL_NETWORK_INTERFACE" \
                --menu "\n$LABEL_NETWORK_INTERFACE_CHOICE\n" 14 78 5 \
                "${interface_choice[@]}"  3>&1 1>&2 2>&3)
 exitstatus=$?
-if [ $exitstatus != 0 ]; then         
+if [ $exitstatus != 0 ]; then
    return 1
 fi
 IPV4_ADDRESS="$(ip addr show $INTERFACE | grep "inet " | cut -d " " -f 6 | cut -d "/" -f 1)"
