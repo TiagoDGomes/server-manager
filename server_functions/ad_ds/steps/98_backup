@@ -9,3 +9,12 @@ backup_file /etc/resolv.conf
 backup_file /etc/krb5.conf
 backup_file /etc/hosts
 backup_file /etc/ntp.conf
+
+
+function rollback_install {
+    shw_info "- Restaurando arquivos modificados..." 
+    restore_file /etc/resolv.conf
+    restore_file /etc/krb5.conf
+    restore_file /etc/hosts
+    restore_file /etc/ntp.conf
+}

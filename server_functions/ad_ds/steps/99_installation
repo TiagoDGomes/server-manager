@@ -121,6 +121,7 @@ fi
 
 if [[ ! -f "/etc/samba/smb.conf" ]] ; then
     shw_err "- Falha ao se tornar controlador de domínio. O arquivo smb.conf não foi gerado." 
+    rollback_install
     exit 1
 fi
 
