@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+
+. lib/include_default
+
+
+
+
+backup_file /etc/resolv.conf
+backup_file /etc/krb5.conf
+backup_file /etc/hosts
+backup_file /etc/ntp.conf

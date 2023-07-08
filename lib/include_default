@@ -23,3 +23,12 @@ shw_warn () {
 shw_err ()  {
     echo $(tput bold)$(tput setaf 1) $@ $(tput sgr 0)
 }
+
+
+backup_file () {
+    [ ! -f "$1.sm-backup" ] && cp "$1" "$1.sm-backup"
+}
+
+restore_file () {
+    [ -f "$1.sm-backup" ] && cp "$1.sm-backup" "$1"
+}
