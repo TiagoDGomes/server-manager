@@ -26,9 +26,48 @@ exitstatus=$?
 if [ $exitstatus != 0 ]; then
    return 1
 fi
+
+
 IPV4_ADDRESS="$(ip addr show $INTERFACE | grep "inet " | cut -d " " -f 6 | cut -d "/" -f 1)"
-IPV4_ADDRESS_MASK="$(ip addr show $INTERFACE | grep "inet " | cut -d " " -f 6 | cut -d "/" -f 2)"
 IPV4_GATEWAY="$(ip route get $IPV4_ADDRESS_TEST_GATEWAY | grep "via" | cut -d " " -f 3)"
-IPV6_ADDRESS="$(ip addr show $INTERFACE | grep "inet6 " | grep "global" | cut -d " " -f 6 | cut -d "/" -f 1)"
-IPV6_ADDRESS_MASK="$(ip addr show $INTERFACE | grep "inet6 " | grep "global" | cut -d " " -f 6 | cut -d "/" -f 2)"
-IPV6_GATEWAY="$(ip -6 route get $IPV6_ADDRESS_TEST_GATEWAY | grep "via" | cut -d " " -f 5)"
+
+ipv4_choices=()
+for ip in $IPV4_ADDRESS; do
+   ipv4_choices+=("$ip")
+   ipv4_choices+=("")   
+done
+IPV4_ADDRESS=$(whiptail --backtitle "$LABEL_BACKTITLE" \
+               --title "$LABEL_NETWORK_INTERFACE" \
+               --menu "\n$LABEL_IPV4_CHOICE\n" 14 78 5 \
+               "${ipv4_choices[@]}"  3>&1 1>&2 2>&3)
+
+exitstatus=$?
+if [ $exitstatus != 0 ]; then
+   exit 1
+fi
+
+IPV4_ADDRESS_MASK="$(ip addr show $INTERFACE | grep "$IPV4_ADDRESS" | cut -d " " -f 6 | cut -d "/" -f 2)"
+
+if [[ ! -z "$IPV6_OPTION"  &&  $IPV6_OPTION != "0" ]]; then
+   IPV6_ADDRESS="$(ip addr show $INTERFACE | grep "inet6 " | grep "global" | cut -d " " -f 6 | cut -d "/" -f 1)"
+   if [ ! -z "$IPV6_ADDRESS" ]; then
+      IPV6_GATEWAY="$(ip -6 route get $IPV6_ADDRESS_TEST_GATEWAY | grep "via" | cut -d " " -f 5)"
+      ipv6_choices=()
+      for ip6 in $IPV6_ADDRESS; do
+         ipv6_choices+=("$ip6")
+         ipv6_choices+=("")   
+      done
+
+      IPV6_ADDRESS=$(whiptail --backtitle "$LABEL_BACKTITLE" \
+                     --title "$LABEL_NETWORK_INTERFACE" \
+                     --menu "\n$LABEL_IPV6_CHOICE\n" 14 78 5 \
+                     "${ipv6_choices[@]}"  3>&1 1>&2 2>&3)
+      IPV6_ADDRESS_MASK="$(ip addr show $INTERFACE | grep "$IPV6_ADDRESS" | cut -d " " -f 6 | cut -d "/" -f 2)"
+
+      exitstatus=$?
+      if [ $exitstatus != 0 ]; then
+         exit 1
+      fi
+   fi
+fi
+

@@ -1,0 +1,26 @@
+#!/usr/bin/env bash
+
+. lib/include_default
+
+
+RESULT="
+  DOMAIN_OPERATION.............: $OPT_JOIN_DOMAIN
+  DNS_REALM....................: $DNS_REALM   
+  DNS_FORWARDER................: $DNS_FORWARDER  
+  NETBIOS_NAME.................: $NETBIOS_NAME
+  DOMAIN_CONTROLLER_NAME.......: $DOMAIN_CONTROLLER_NAME 
+  IP_ADDRESS_PDC_EMULATOR......: $IP_ADDRESS_PDC_EMULATOR 
+  DOMAIN_ADMIN_USER............: $DOMAIN_ADMIN_USER
+  ADMINPASS....................: $ADMINPASS_ECHO 
+  INTERFACE....................: $INTERFACE
+  IPV4_ADDRESS.................: $IPV4_ADDRESS
+  IPV6_ADDRESS.................: $IPV6_ADDRESS"   
+
+
+if (whiptail --backtitle "$LABEL_WIZARD_ADD_FUNC_RES" \
+              --title "$LABEL_AD_DS_CONFIRMATION_TITLE" \
+              --yesno "$LABEL_CONFIRM_PARAMETERS \n$RESULT \n\n $LABEL_START_INSTALL_QUESTION" 24 80); then
+    echo "====="
+else
+    exit 0
+fi

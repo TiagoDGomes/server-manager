@@ -1,0 +1,36 @@
+#!/usr/bin/env bash
+
+. lib/include_default
+
+L_ADMIN_PASS=""
+
+if [[ "$JOIN_DOMAIN" == "1"  ]]; then
+    DOMAIN_ADMIN_USER=$(whiptail --backtitle "$LABEL_ACTIVE_DIRECTORY" \
+                                 --inputbox  "\n$LABEL_ADMIN_USER_CHOICE\n\n" 14 55 $DOMAIN_ADMIN_USER \
+                                 --title "DOMAIN_ADMIN_USER" 3>&1 1>&2 2>&3)
+    exitstatus=$?
+    if [ $exitstatus = 0 ]; then
+        echo "DOMAIN_ADMIN_USER = $DOMAIN_ADMIN_USER"          
+    else
+        exit 0
+    fi
+else
+    ADMINPASS=$(tr -dc A-Za-z0-9 </dev/urandom | head -c 13 ; echo '')    
+    L_ADMIN_PASS="$LABEL_AD_DS_ADMIN_PASS_GENERATE $ADMINPASS"   
+fi
+
+ADMINPASS=$(whiptail --backtitle "$LABEL_ACTIVE_DIRECTORY" \
+                     --passwordbox  "\n$LABEL_ADMIN_PASS_CHOICE\n\n$L_ADMIN_PASS\n\n" 14 55 \
+                     $ADMINPASS \
+                     --title "ADMINPASS" 3>&1 1>&2 2>&3)
+exitstatus=$?
+ADMINPASS_ECHO="******"
+if [ $exitstatus = 0 ]; then
+    echo "ADMINPASS = $ADMINPASS"          
+else
+    exit 0
+fi
+if [[ -z "$ADMINPASS" ]]; then
+    ADMINPASS=$(cat /proc/sys/kernel/random/uuid | sed 's/[-]//g' | head -c 20; echo;)
+    ADMINPASS_ECHO=$ADMINPASS
+fi

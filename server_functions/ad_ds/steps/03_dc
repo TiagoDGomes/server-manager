@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+
+. lib/include_default
+
+
+DOMAIN_CONTROLLER_NAME=$(hostname)
+DOMAIN_CONTROLLER_NAME=$(whiptail --backtitle "$LABEL_ACTIVE_DIRECTORY" \
+                                  --inputbox "\n$LABEL_DOMAIN_CONTROLLER_NAME_CHOICE\n\n" 11 55 \
+                                  $DOMAIN_CONTROLLER_NAME \
+                                  --title "DOMAIN_CONTROLLER_NAME" 3>&1 1>&2 2>&3)
+exitstatus=$?
+if [ $exitstatus = 0 ]; then
+    echo "DOMAIN_CONTROLLER_NAME = $DOMAIN_CONTROLLER_NAME" 
+else
+    exit 0
+fi

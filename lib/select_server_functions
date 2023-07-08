@@ -20,9 +20,4 @@ if [ ! -z "$SERVER_FUNCTION" ]; then
         . server_functions/$SERVER_FUNCTION/steps/$s
     done
 fi
-# echo "==========printenv"
-# printenv 
-# echo "==========env"
-# env
-# echo "==========set"
-set 
+

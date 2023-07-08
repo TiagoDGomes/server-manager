@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+
+. lib/include_default
+    
+if (whiptail --backtitle "$LABEL_BACKTITLE" \
+             --title "IPv6" \
+             --yesno "$LABEL_AD_DS_IPV6_SUPPORT" 9 50); then
+    IPV6_OPTION=1
+else
+    IPV6_OPTION=0
+fi
+
+
+. lib/select_interface

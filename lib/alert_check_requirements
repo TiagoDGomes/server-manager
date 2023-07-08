@@ -9,5 +9,5 @@ if (whiptail --title "$LABEL_WIZARD_ADD_FUNC_RES v$VERSION" \
                \n - $LABEL_WIZARD_START_ALERT_STATIC." 20 85 6 ); then
     CONTINUE="1"
 else
-    return 1
+    exit 1
 fi

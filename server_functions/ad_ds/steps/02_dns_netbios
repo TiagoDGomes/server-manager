@@ -1,0 +1,56 @@
+#!/usr/bin/env bash
+
+. lib/include_default
+
+
+
+
+
+# =================================================================
+DNS_BACKEND=$(whiptail \
+                    --title "$LABEL_ACTIVE_DIRECTORY" \
+                    --backtitle "$LABEL_BACKTITLE" \
+                    --menu "\n$LABEL_AD_DS_DNS_BACKEND\n\n"  16 55 3 \
+                    "BIND9_DLZ" "Bind DNS"   \
+                    "SAMBA_INTERNAL" "Samba Internal DNS"  \
+                     3>&1 1>&2 2>&3) 
+
+exitstatus=$?
+if [ $exitstatus = 0 ]; then
+    echo "DNS_BACKEND = $DNS_BACKEND" 
+else
+    exit 0
+fi
+# =================================================================
+DNS_FORWARDER=$(whiptail --backtitle "$LABEL_BACKTITLE" \
+                         --inputbox "\n$LABEL_DNS_FORWARDERS_CHOICE\n\n"  11 55 $DNS_FORWARDER \
+                         --title "DNS_FORWARDER" 3>&1 1>&2 2>&3)
+exitstatus=$?
+if [ $exitstatus = 0 ]; then
+    echo "DNS_FORWARDER = $DNS_FORWARDER" 
+else
+    exit 0
+fi
+# =================================================================
+
+DNS_REALM=$(cat /etc/resolv.conf | grep "search" | cut -f 2 -d " ")
+
+DNS_REALM=$(whiptail --backtitle "$LABEL_BACKTITLE" \
+                     --inputbox "\n$LABEL_DNS_REALM_CHOICE\n\n"  13 55 $DNS_REALM  \
+                     --title "DNS_REALM" 3>&1 1>&2 2>&3)
+exitstatus=$?
+if [ $exitstatus = 0 ]; then
+    echo "DNS_REALM = $DNS_REALM" 
+else
+    exit 0
+fi
+
+# =================================================================
+NETBIOS_NAME=$(echo "${DNS_REALM^^}" | cut -d "." -f 1)
+NETBIOS_NAME=$(whiptail --backtitle "$LABEL_ACTIVE_DIRECTORY" \
+                        --inputbox "\n$LABEL_NETBIOS_CHOICE\n\n"  13 55 $NETBIOS_NAME \
+                        --title "NETBIOS_NAME" 3>&1 1>&2 2>&3)
+exitstatus=$?
+if [ $exitstatus = 0 ]; then
+    echo "NETBIOS_NAME = $NETBIOS_NAME" 
+fi
