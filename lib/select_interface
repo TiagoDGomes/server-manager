@@ -6,12 +6,15 @@ IPV4_ADDRESS_TEST_GATEWAY="8.8.8.8"
 IPV6_ADDRESS_TEST_GATEWAY="2001:4860:4860::8888"
 
 interface_choice=()
-INTERFACES=$(ip link | egrep "BROADCAST|MULTICAST|1500" | cut -d ":" -f2)
+INTERFACES=$(ip link | grep "UP" | grep "BROADCAST" |  cut -d ":" -f2)
 for n in $INTERFACES; do
    mac=$(cat /sys/class/net/$n/address)
-   slot_name=$(cat /sys/class/net/$n/device/uevent | grep "PCI_SLOT_NAME" | cut -d "=" -f 2)
-   device_name=$(lspci -s "$slot_name" | cut -d ":" -f 3)
-   device_name=`echo $device_name | sed 's/ *$//g'`
+   device_name=""
+   if [ -f "/sys/class/net/$n/device/uevent" ]; then
+      slot_name=$(cat /sys/class/net/$n/device/uevent | grep "PCI_SLOT_NAME" | cut -d "=" -f 2)
+      device_name=$(lspci -s "$slot_name" | cut -d ":" -f 3)
+      device_name=`echo $device_name | sed 's/ *$//g'`  
+   fi
    interface_choice+=("$n")
    interface_choice+=("[$mac] $device_name")
 done
