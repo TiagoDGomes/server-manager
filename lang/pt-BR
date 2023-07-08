@@ -42,3 +42,7 @@ LABEL_DNS_FORWARDERS_CHOICE="Insira os endereços IP dos servidores DNS encaminh
 LABEL_DNS_REALM_CHOICE="Insira o nome do seu domínio raiz:\n\n(ex.: domain.example.com)"
 
 LABEL_AD_DS_DNS_BACKEND="Selecione o backend para DNS:"
+
+
+LABEL_DHCP="Servidor DHCP"
+LABEL_DHCP_IPV6_SUPPORT="Ativar suporte a IPv6 para $LABEL_DHCP?"
