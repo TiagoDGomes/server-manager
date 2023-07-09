@@ -4,7 +4,7 @@
 
 
 RESULT="
-  DOMAIN_OPERATION.............: $OPT_JOIN_DOMAIN
+  DHCP_SERVER..................: $OPT_JOIN_DOMAIN
   DNS_REALM....................: $DNS_REALM   
   DNS_FORWARDER................: $DNS_FORWARDER  
   NETBIOS_NAME.................: $NETBIOS_NAME
