@@ -20,6 +20,7 @@ shw_info () {
 shw_warn () {
     echo $(tput bold)$(tput setaf 2) $@ $(tput sgr 0)
 }
+
 shw_err ()  {
     echo $(tput bold)$(tput setaf 1) $@ $(tput sgr 0)
 }
@@ -62,3 +63,37 @@ subnet () {
     [ $1 == 29 ] && echo "255.255.255.248" ; # 2097152 (2097150)" ; # 6
     [ $1 == 30 ] && echo "255.255.255.252" ; # 4194304 (4194302)" ; # 2   
 }
+
+info_net_addr_net(){
+    ip=$1; mask=$2
+    IFS=. read -r i1 i2 i3 i4 <<< "$ip"
+    IFS=. read -r m1 m2 m3 m4 <<< "$mask"
+    echo "$((i1 & m1)).$((i2 & m2)).$((i3 & m3)).$((i4 & m4))"
+}
+info_net_addr_brd(){
+    ip=$1; mask=$2
+    IFS=. read -r i1 i2 i3 i4 <<< "$ip"
+    IFS=. read -r m1 m2 m3 m4 <<< "$mask"
+    echo "$((i1 & m1 | 255-m1)).$((i2 & m2 | 255-m2)).$((i3 & m3 | 255-m3)).$((i4 & m4 | 255-m4))"
+}
+
+info_net_addr_first_ip(){
+    ip=$1; mask=$2
+    IFS=. read -r i1 i2 i3 i4 <<< "$ip"
+    IFS=. read -r m1 m2 m3 m4 <<< "$mask"
+    echo "$((i1 & m1)).$((i2 & m2)).$((i3 & m3)).$(((i4 & m4)+1))"
+}
+
+info_net_addr_last_ip(){
+    ip=$1; mask=$2
+    IFS=. read -r i1 i2 i3 i4 <<< "$ip"
+    IFS=. read -r m1 m2 m3 m4 <<< "$mask"
+    echo "$((i1 & m1 | 255-m1)).$((i2 & m2 | 255-m2)).$((i3 & m3 | 255-m3)).$(((i4 & m4 | 255-m4)-1))"
+}
+
+# info_net_addr_net 10.10.128.2 $(subnet 19)
+# info_net_addr_brd 10.10.128.2 $(subnet 19)
+# info_net_addr_first_ip 10.10.128.2 $(subnet 19)
+# info_net_addr_last_ip 10.10.128.2 $(subnet 19)
+
+
