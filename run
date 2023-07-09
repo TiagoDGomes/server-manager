@@ -1,18 +1,16 @@
 #!/usr/bin/env bash
 
+# wget "https://raw.githubusercontent.com/TiagoDGomes/server-manager/main/run" -q -O - | bash -
+
 echo "- Cleaning..."
-rm -rf /opt/server-manager-main/
+rm -rf /tmp/server-manager-main/
 echo "- Check unzip..."
 apt-get install -y unzip > /dev/null
 echo "- Download..."
 wget -q "https://github.com/TiagoDGomes/server-manager/archive/refs/heads/main.zip" -O /tmp/sm.zip 
 echo "- Extracting..."
-unzip -q /tmp/sm.zip -d /opt/
-echo "- Cleaning old version..."
-rm -rf /opt/server-manager
-echo "- Moving..."
-mv /opt/server-manager-main /opt/server-manager
+unzip -q /tmp/sm.zip -d /tmp/
 echo "- Set attributes..."
-chmod -R +x /opt/server-manager/
+chmod -R +x /tmp/server-manager-main/
 echo "- Cleaning installer..."
-rm /opt/server-manager/server-manager-installer
+/bin/bash /tmp/server-manager-main/server-manager
