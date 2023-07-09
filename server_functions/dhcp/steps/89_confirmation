@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+
+. lib/include_default
+
+
+RESULT="
+  DOMAIN_OPERATION.............: $OPT_JOIN_DOMAIN
+  DNS_REALM....................: $DNS_REALM   
+  DNS_FORWARDER................: $DNS_FORWARDER  
+  NETBIOS_NAME.................: $NETBIOS_NAME
+  DOMAIN_CONTROLLER_NAME.......: $DOMAIN_CONTROLLER_NAME 
+  IP_ADDRESS_PDC_EMULATOR......: $IP_ADDRESS_PDC_EMULATOR 
+  DOMAIN_ADMIN_USER............: $DOMAIN_ADMIN_USER
+  ADMINPASS....................: $ADMINPASS_ECHO 
+  INTERFACE....................: $INTERFACE
+  IPV4_ADDRESS.................: $IPV4_ADDRESS
+  IPV6_ADDRESS.................: $IPV6_ADDRESS"   
