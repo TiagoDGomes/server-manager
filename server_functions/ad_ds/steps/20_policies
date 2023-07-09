@@ -22,6 +22,7 @@
 
 
 function ad_ds_install_policies {
+          shw_info "- Templates..."
 #         shw_info "- Instalando políticas de grupo do Samba..."
 #         echo "$ADMINPASS" | samba-tool gpo admxload -U Administrator 
 
