@@ -2,53 +2,53 @@
 
 . lib/include_default
 
-win_10_admx_url="https://download.microsoft.com/download/3/0/6/30680643-987a-450c-b906-a455fff4aee8/Administrative%20Templates%20(.admx)%20for%20Windows%2010%20October%202020%20Update.msi"
+# win_10_admx_url="https://download.microsoft.com/download/3/0/6/30680643-987a-450c-b906-a455fff4aee8/Administrative%20Templates%20(.admx)%20for%20Windows%2010%20October%202020%20Update.msi"
 
-if [[ "$JOIN_DOMAIN" == "0"  ]]; then
-    POLICIES_CHOICES=$(whiptail --backtitle "$LABEL_BACKTITLE" \
-                                --title "ADMX policies" \
-                                --checklist "\nAdministrative Templates (.admx):\n" 18 78 9 \
-                                    "win_10" "Windows 10 October 2020 Update (20H2)" OFF \
-                                    "chrome" "Chrome/Chromium" OFF \
-                                    "firefox" "Mozilla Firefox" OFF  3>&1 1>&2 2>&3)
-    exitstatus=$?
-    if [ $exitstatus = 0 ]; then
-        echo "POLICIES_CHOICES = $POLICIES_CHOICES" 
-    else
-        exit 0
-    fi
-fi
+# if [[ "$JOIN_DOMAIN" == "0"  ]]; then
+#     ADMX_TEMPLATES=$(whiptail --backtitle "$LABEL_BACKTITLE" \
+#                                 --title "ADMX policies" \
+#                                 --checklist "\nAdministrative Templates (.admx):\n" 18 78 9 \
+#                                     "win_10" "Windows 10 October 2020 Update (20H2)" OFF \
+#                                     "chrome" "Chrome/Chromium" OFF \
+#                                     "firefox" "Mozilla Firefox" OFF  3>&1 1>&2 2>&3)
+#     exitstatus=$?
+#     if [ $exitstatus = 0 ]; then
+#         echo "ADMX_TEMPLATES = $ADMX_TEMPLATES" 
+#     else
+#         exit 0
+#     fi
+# fi
 
 
 
 function ad_ds_install_policies {
-        shw_info "- Instalando políticas de grupo do Samba..."
-        echo "$ADMINPASS" | samba-tool gpo admxload -U Administrator 
+#         shw_info "- Instalando políticas de grupo do Samba..."
+#         echo "$ADMINPASS" | samba-tool gpo admxload -U Administrator 
 
-        shw_info "- Fazendo download das políticas de grupo do Windows 10..."
-        wget -4 "$win_10_admx_url" -O /tmp/admx.msi   
-        mkdir -p /tmp/admxwin10
-        shw_info "- Extraindo..."
-        msiextract /tmp/admx.msi -C /tmp/admxwin10
-        shw_info "- Instalando..."
-        echo "$ADMINPASS" | samba-tool gpo admxload -U Administrator --admx-dir="/tmp/admxwin10/Program Files/Microsoft Group Policy/Windows 10 October 2020 Update (20H2)/PolicyDefinitions/"
-        rm -rf /tmp/admxwin10
-        rm /tmp/admx.msi
+#         shw_info "- Fazendo download das políticas de grupo do Windows 10..."
+#         wget -4 "$win_10_admx_url" -O /tmp/admx.msi   
+#         mkdir -p /tmp/admxwin10
+#         shw_info "- Extraindo..."
+#         msiextract /tmp/admx.msi -C /tmp/admxwin10
+#         shw_info "- Instalando..."
+#         echo "$ADMINPASS" | samba-tool gpo admxload -U Administrator --admx-dir="/tmp/admxwin10/Program Files/Microsoft Group Policy/Windows 10 October 2020 Update (20H2)/PolicyDefinitions/"
+#         rm -rf /tmp/admxwin10
+#         rm /tmp/admx.msi
 
-        shw_info "- Instalando políticas de grupo do Firefox..."
-        apt-get install -y unzip
-        wget "https://github.com/mozilla/policy-templates/releases/download/v3.9/policy_templates_v3.9.zip" -O /tmp/firefoxadmx.zip
-        mkdir -p /tmp/firefoxadmx
-        unzip /tmp/firefoxadmx.zip -d /tmp/firefoxadmx
-        echo "$ADMINPASS" | samba-tool gpo admxload -UAdministrator --admx-dir=/tmp/firefoxadmx/windows/
-        rm -rf /tmp/firefoxadmx
-        rm -rf /tmp/firefoxadmx.zip
+#         shw_info "- Instalando políticas de grupo do Firefox..."
+#         apt-get install -y unzip
+#         wget "https://github.com/mozilla/policy-templates/releases/download/v3.9/policy_templates_v3.9.zip" -O /tmp/firefoxadmx.zip
+#         mkdir -p /tmp/firefoxadmx
+#         unzip /tmp/firefoxadmx.zip -d /tmp/firefoxadmx
+#         echo "$ADMINPASS" | samba-tool gpo admxload -UAdministrator --admx-dir=/tmp/firefoxadmx/windows/
+#         rm -rf /tmp/firefoxadmx
+#         rm -rf /tmp/firefoxadmx.zip
 
-        shw_info "- Instalando políticas de grupo do Chrome/Chromium..."
-        wget -4 "https://dl.google.com/dl/edgedl/chrome/policy/policy_templates.zip" -O /tmp/chromeadmx.zip
-        mkdir -p /tmp/chromeadmx
-        unzip /tmp/chromeadmx.zip -d /tmp/chromeadmx
-        echo "$ADMINPASS" | samba-tool gpo admxload -UAdministrator --admx-dir=/tmp/chromeadmx/windows/admx/pt-BR/
-        rm -rf /tmp/chromeadmx
-        rm -rf /tmp/chromeadmx.zip
+#         shw_info "- Instalando políticas de grupo do Chrome/Chromium..."
+#         wget -4 "https://dl.google.com/dl/edgedl/chrome/policy/policy_templates.zip" -O /tmp/chromeadmx.zip
+#         mkdir -p /tmp/chromeadmx
+#         unzip /tmp/chromeadmx.zip -d /tmp/chromeadmx
+#         echo "$ADMINPASS" | samba-tool gpo admxload -UAdministrator --admx-dir=/tmp/chromeadmx/windows/admx/pt-BR/
+#         rm -rf /tmp/chromeadmx
+#         rm -rf /tmp/chromeadmx.zip
 }
