@@ -3,9 +3,6 @@
 . lib/include_default
 
 
-
-
-
 # =================================================================
 DNS_BACKEND=$(whiptail \
                     --title "$LABEL_ACTIVE_DIRECTORY" \
@@ -23,7 +20,10 @@ else
 fi
 # =================================================================
 DNS_FORWARDER=$(grep "nameserver" /etc/resolv.conf | sed  's/nameserver //g' )
-DNS_FORWARDER=$(inputbox "DNS_FORWARDER" "$LABEL_DNS_FORWARDERS_CHOICE" "$LABEL_BACKTITLE" 11 55 $DNS_FORWARDER )
+DNS_FORWARDER=$(inputbox "DNS_FORWARDER" \
+                         "$LABEL_DNS_FORWARDERS_CHOICE" \
+                         "$LABEL_BACKTITLE" 14 55 \
+                         "$DNS_FORWARDER" )
 exitstatus=$?
 if [ $exitstatus = 0 ]; then
     echo "DNS_FORWARDER = $DNS_FORWARDER" 
@@ -33,10 +33,10 @@ fi
 # =================================================================
 
 DNS_REALM=$(cat /etc/resolv.conf | grep "search" | cut -f 2 -d " ")
-
-DNS_REALM=$(whiptail --backtitle "$LABEL_BACKTITLE" \
-                     --inputbox "\n$LABEL_DNS_REALM_CHOICE\n\n"  13 55 $DNS_REALM  \
-                     --title "DNS_REALM" 3>&1 1>&2 2>&3)
+DNS_REALM=$(inputbox "DNS_REALM" \
+                         "$LABEL_DNS_REALM_CHOICE" \
+                         "$LABEL_BACKTITLE" 14 55 \
+                         "$DNS_REALM" )
 exitstatus=$?
 if [ $exitstatus = 0 ]; then
     echo "DNS_REALM = $DNS_REALM" 
@@ -46,9 +46,11 @@ fi
 
 # =================================================================
 NETBIOS_NAME=$(echo "${DNS_REALM^^}" | cut -d "." -f 1)
-NETBIOS_NAME=$(whiptail --backtitle "$LABEL_ACTIVE_DIRECTORY" \
-                        --inputbox "\n$LABEL_NETBIOS_CHOICE\n\n"  13 55 $NETBIOS_NAME \
-                        --title "NETBIOS_NAME" 3>&1 1>&2 2>&3)
+NETBIOS_NAME=$(inputbox "NETBIOS_NAME" \
+                "$LABEL_NETBIOS_CHOICE" \
+                "$LABEL_BACKTITLE"  13 55 \
+                "$NETBIOS_NAME" )
+
 exitstatus=$?
 if [ $exitstatus = 0 ]; then
     echo "NETBIOS_NAME = $NETBIOS_NAME" 
