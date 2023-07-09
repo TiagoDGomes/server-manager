@@ -2,13 +2,18 @@
 
 . lib/include_default
     
-if (whiptail --backtitle "$LABEL_BACKTITLE" \
-             --title "IPv6" \
-             --yesno "$LABEL_AD_DS_IPV6_SUPPORT" 9 50); then
-    IPV6_OPTION=1
-else
-    IPV6_OPTION=0
-fi
+IPV6_ADDRESS="$(ip addr show $INTERFACE | grep "inet6 " | grep "global" | cut -d " " -f 6 | cut -d "/" -f 1)"
 
+if [ -z "$IPV6_ADDRESS"] ; then
+    IPV6_OPTION=0
+else
+    if (whiptail --backtitle "$LABEL_BACKTITLE" \
+                --title "IPv6" \
+                --yesno "$LABEL_AD_DS_IPV6_SUPPORT" 9 50); then
+        IPV6_OPTION=1
+    else
+        IPV6_OPTION=0
+    fi
+fi
 
 . lib/select_interface
