@@ -12,8 +12,13 @@ for n in $INTERFACES; do
    device_name=""
    if [ -f "/sys/class/net/$n/device/uevent" ]; then
       slot_name=$(cat /sys/class/net/$n/device/uevent | grep "PCI_SLOT_NAME" | cut -d "=" -f 2)
-      device_name=$(lspci -s "$slot_name" | cut -d ":" -f 3)
-      device_name=`echo $device_name | sed 's/ *$//g'`  
+      driver=$(cat /sys/class/net/$n/device/uevent | grep "DRIVER" | cut -d "=" -f 2)
+      if [ ! -z "$slot_name" ]; then
+         device_name=$(lspci -s "$slot_name" | cut -d ":" -f 3)
+         device_name=`echo $device_name | sed 's/ *$//g'` 
+      else
+         device_name="$driver"
+      fi 
    fi
    interface_choice+=("$n")
    interface_choice+=("[$mac] $device_name")
