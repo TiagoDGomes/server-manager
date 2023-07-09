@@ -107,7 +107,9 @@ _inputmenu_choice=()
 inputmenu_show(){
     whiptail --title "$1" \
                 --menu "\n$2\n\n" $4 $5 $6 "${_inputmenu_choice[@]}" \
-                --backtitle "$3" 3>&1 1>&2 2>&3
+                --backtitle "$3" 3>&1 1>&2 2>&3 
+}
+inputmenu_init(){
     _inputmenu_choice=()
 }
 inputmenu_add(){
