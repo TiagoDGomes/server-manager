@@ -12,5 +12,5 @@ echo "- Extracting..."
 unzip -q /tmp/sm.zip -d /tmp/
 echo "- Set attributes..."
 chmod -R +x /tmp/server-manager-main/
-echo "- Cleaning installer..."
+cd /tmp/server-manager-main/
 /bin/bash /tmp/server-manager-main/server-manager
