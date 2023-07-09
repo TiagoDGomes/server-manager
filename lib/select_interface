@@ -47,6 +47,9 @@ if [ $exitstatus != 0 ]; then
 fi
 
 IPV4_ADDRESS_MASK="$(ip addr show $INTERFACE | grep "$IPV4_ADDRESS" | cut -d " " -f 6 | cut -d "/" -f 2)"
+IPV4_ADDRESS_BRD="$(ip addr show $INTERFACE | awk '/inet / {print $4}')"
+IPV4_ADDRESS_NET=$(info_net_addr_net $IPV4_ADDRESS $(subnet $IPV4_ADDRESS_MASK))
+
 
 if [[ ! -z "$IPV6_OPTION"  &&  $IPV6_OPTION != "0" ]]; then
    IPV6_ADDRESS="$(ip addr show $INTERFACE | grep "inet6 " | grep "global" | cut -d " " -f 6 | cut -d "/" -f 1)"

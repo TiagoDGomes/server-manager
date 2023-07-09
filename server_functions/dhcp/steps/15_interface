@@ -11,4 +11,9 @@ else
 fi
 
 
+
+
 . lib/select_interface
+
+
+echo "subnet $IPV4_ADDRESS_NET netmask $IPV4_ADDRESS_BRD {}"
