@@ -2,10 +2,13 @@
 
 . lib/include_default
 
+
+# ========================================================
+inputmenu_init
+
 IPV4_ADDRESS_TEST_GATEWAY="8.8.8.8"
 IPV6_ADDRESS_TEST_GATEWAY="2001:4860:4860::8888"
 
-interface_choice=()
 INTERFACES=$(ip link | grep "UP" | grep "BROADCAST" |  cut -d ":" -f2)
 for n in $INTERFACES; do
    mac=$(cat /sys/class/net/$n/address)
@@ -20,62 +23,64 @@ for n in $INTERFACES; do
          device_name="$driver"
       fi 
    fi
-   interface_choice+=("$n")
-   interface_choice+=("[$mac] $device_name")
+   inputmenu_add "$n" "[$mac] $device_name"
 done
-INTERFACE=$(whiptail --backtitle "$LABEL_BACKTITLE" \
-               --title "$LABEL_NETWORK_INTERFACE" \
-               --menu "\n$LABEL_NETWORK_INTERFACE_CHOICE\n" 14 78 5 \
-               "${interface_choice[@]}"  3>&1 1>&2 2>&3)
-exitstatus=$?
-if [ $exitstatus != 0 ]; then
-   return 1
-fi
+INTERFACE=$(inputmenu_show "$LABEL_NETWORK_INTERFACE" \
+                           "$LABEL_NETWORK_INTERFACE_CHOICE" \
+                           "$LABEL_BACKTITLE" 14 78 5)
 
+[ -z "$INTERFACE" ] && exit 1
+
+
+
+
+# ========================================================
+inputmenu_init
 
 IPV4_ADDRESS="$(ip addr show $INTERFACE | grep "inet " | cut -d " " -f 6 | cut -d "/" -f 1)"
 IPV4_GATEWAY="$(ip route get $IPV4_ADDRESS_TEST_GATEWAY | grep "via" | cut -d " " -f 3)"
 
-ipv4_choices=()
 for ip in $IPV4_ADDRESS; do
-   ipv4_choices+=("$ip")
-   ipv4_choices+=("")   
+   inputmenu_add "$ip" ""  
 done
-IPV4_ADDRESS=$(whiptail --backtitle "$LABEL_BACKTITLE" \
-               --title "$LABEL_NETWORK_INTERFACE" \
-               --menu "\n$LABEL_IPV4_CHOICE\n" 14 78 5 \
-               "${ipv4_choices[@]}"  3>&1 1>&2 2>&3)
+IPV4_ADDRESS=$(inputmenu_show "$LABEL_NETWORK_INTERFACE" \
+                           "$LABEL_IPV4_CHOICE" \
+                           "$LABEL_BACKTITLE" 14 78 5)
 
-exitstatus=$?
-if [ $exitstatus != 0 ]; then
-   exit 1
-fi
+[ -z "$IPV4_ADDRESS" ] && exit 1
 
 IPV4_ADDRESS_MASK="$(ip addr show $INTERFACE | grep "$IPV4_ADDRESS" | cut -d " " -f 6 | cut -d "/" -f 2)"
 IPV4_ADDRESS_BRD="$(ip addr show $INTERFACE | awk '/inet / {print $4}')"
 IPV4_ADDRESS_NET=$(info_net_addr_net $IPV4_ADDRESS $(subnet $IPV4_ADDRESS_MASK))
 
+# ========================================================
 
-if [[ ! -z "$IPV6_OPTION"  &&  $IPV6_OPTION != "0" ]]; then
+echo "IPV6_OPTION = $IPV6_OPTION"
+if [[ ! -z "$IPV6_OPTION"  &&  "$IPV6_OPTION" != "0" ]]; then
+   
+   inputmenu_init
+
    IPV6_ADDRESS="$(ip addr show $INTERFACE | grep "inet6 " | grep "global" | cut -d " " -f 6 | cut -d "/" -f 1)"
    if [ ! -z "$IPV6_ADDRESS" ]; then
       IPV6_GATEWAY="$(ip -6 route get $IPV6_ADDRESS_TEST_GATEWAY | grep "via" | cut -d " " -f 5)"
-      ipv6_choices=()
+      # ipv6_choices=()
       for ip6 in $IPV6_ADDRESS; do
-         ipv6_choices+=("$ip6")
-         ipv6_choices+=("")   
+         # ipv6_choices+=("$ip6")
+         # ipv6_choices+=("")   
+         inputmenu_add "$ip6" ""  
       done
 
-      IPV6_ADDRESS=$(whiptail --backtitle "$LABEL_BACKTITLE" \
-                     --title "$LABEL_NETWORK_INTERFACE" \
-                     --menu "\n$LABEL_IPV6_CHOICE\n" 14 78 5 \
-                     "${ipv6_choices[@]}"  3>&1 1>&2 2>&3)
+      # IPV6_ADDRESS=$(whiptail --backtitle "$LABEL_BACKTITLE" \
+      #                --title "$LABEL_NETWORK_INTERFACE" \
+      #                --menu "\n$LABEL_IPV6_CHOICE\n" 14 78 5 \
+      #                "${ipv6_choices[@]}"  3>&1 1>&2 2>&3)
+      IPV6_ADDRESS=$(inputmenu_show "$LABEL_NETWORK_INTERFACE" \
+                           "$LABEL_IPV6_CHOICE" \
+                           "$LABEL_BACKTITLE" 14 78 5)
+
       IPV6_ADDRESS_MASK="$(ip addr show $INTERFACE | grep "$IPV6_ADDRESS" | cut -d " " -f 6 | cut -d "/" -f 2)"
 
-      exitstatus=$?
-      if [ $exitstatus != 0 ]; then
-         exit 1
-      fi
+      [ -z "$IPV6_ADDRESS" ] && exit 1  
    fi
 fi
 
