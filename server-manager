@@ -4,7 +4,7 @@
 
 . lib/alert_check_requirements
 
-server_functions_list=$(ls server_functions)
+server_functions_list=$(cat resources.list)
 
 server_functions_choice=()
 
