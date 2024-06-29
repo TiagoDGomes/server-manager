@@ -1,0 +1,45 @@
+#!/usr/bin/env bash
+
+. lib/include_default
+
+apt update
+apt install -y $GUACAMOLE_DEPENDENCIES
+
+GUACAMOLE_SERVER_FILE="/tmp/guacamole-server.tar.gz"
+GUACAMOLE_CLIENT_FILE="/var/lib/$TOMCAT_VERSION/webapps/guacamole.war"
+
+if [ ! -f  "$GUACAMOLE_SERVER_FILE" ]; then
+    shw_warn " -- Downloading guacamole-server..." 
+    wget "$GUACAMOLE_SERVER_URL" -O "$GUACAMOLE_SERVER_FILE"
+fi
+shw_warn " -- Extracting guacamole-server..." 
+tar -xzf "$GUACAMOLE_SERVER_FILE" -C /tmp/
+cd /tmp/guacamole-server-$GUACAMOLE_CURRENT_VERSION/
+shw_warn " -- autoreconf guacamole-server..." 
+autoreconf -fi
+shw_warn " -- configure guacamole-server..." 
+./configure --with-init-dir=/etc/init.d
+shw_warn " -- make guacamole-server..." 
+make
+shw_warn " -- installing guacamole-server..."
+make install
+
+if [ ! -f  "$GUACAMOLE_CLIENT_FILE" ]; then
+    shw_warn " -- Downloading guacamole-client..." 
+    wget "$GUACAMOLE_CLIENT_URL" -O "$GUACAMOLE_CLIENT_FILE"
+fi
+ldconfig
+
+
+
+
+mkdir -v /etc/guacamole
+mkdir -v /etc/guacamole/{lib,extensions}
+
+
+
+
+
+#wget "$GUACAMOLE_CLIENT_URL" -O /tmp/guacamole-client.tar.gz
+
+

@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+
+. lib/include_default
+
+
+
+
+GUACAMOLE_CURRENT_VERSION="1.5.5"
+
+GUACAMOLE_SERVER_URL="https://apache.org/dyn/closer.lua/guacamole/$GUACAMOLE_CURRENT_VERSION/source/guacamole-server-$GUACAMOLE_CURRENT_VERSION.tar.gz?action=download"
+GUACAMOLE_CLIENT_URL="https://apache.org/dyn/closer.lua/guacamole/$GUACAMOLE_CURRENT_VERSION/binary/guacamole-$GUACAMOLE_CURRENT_VERSION.war?action=download"
+GUACAMOLE_JDBC_URL="https://apache.org/dyn/closer.lua/guacamole/$GUACAMOLE_CURRENT_VERSION/source/guacamole-auth-jdbc-$GUACAMOLE_CURRENT_VERSION.tar.gz?action=download"
+GUACAMOLE_CONNECTOR="https://dev.mysql.com/get/Downloads/Connector-J/mysql-connector-j_8.4.0-1debian12_all.deb"
+

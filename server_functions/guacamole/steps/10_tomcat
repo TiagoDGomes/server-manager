@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+
+. lib/include_default
+
+#inputmenu_init
+
+#inputmenu_add tomcat9 "Tomcat 9"
+#inputmenu_add tomcat10 "Tomcat 10"
+
+#TOMCAT_VERSION=$(inputmenu_show "Tomcat" "Selecione a versão do Tomcat a ser utilizada:" "" 14 78 5)
+TOMCAT_VERSION="tomcat10"

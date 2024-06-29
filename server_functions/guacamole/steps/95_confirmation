@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+
+. lib/include_default
+
+
+RESULT="
+  GUACAMOLE.....: Yes
+  
+  OPTIONAL......: $GUACAMOLE_OPTIONAL_SELECTED
+
+  DEPENDENCIES..: $GUACAMOLE_DEPENDENCIES"   
+
+
+if (confirmbox "Confirmação" "$LABEL_CONFIRM_PARAMETERS\n\n$RESULT" "$LABEL_WIZARD_ADD_FUNC_RES" 25 70 ); then
+    echo "====="
+else
+    exit 0
+fi

@@ -1,0 +1,44 @@
+#!/usr/bin/env bash
+
+. lib/include_default
+
+
+
+GUACAMOLE_DEPENDENCIES="$TOMCAT_VERSION $TOMCAT_VERSION-common $TOMCAT_VERSION-admin $TOMCAT_VERSION-user $TOMCAT_VERSION-examples libcairo2-dev libjpeg62-turbo-dev libpng-dev libtool-bin uuid-dev libossp-uuid-dev wget make"
+
+GUACAMOLE_OPTIONAL_LIST='
+guacenc=libavcodec-dev libavformat-dev libavutil-dev libswscale-dev
+vnc=libvncserver-dev
+rdp=freerdp2-dev
+ssh=libssh2-1-dev libpango1.0-dev libssl-dev
+webp=libwebp-dev
+kubernets=libwebsockets-dev libssl-dev
+audio=libpulse-dev libvorbis-dev
+'
+
+inputchoice_init
+
+inputchoice_add "vnc" "Virtual Network Computing (VNC)" on
+inputchoice_add "rdp" "Remote Desktop Protocol (RDP)" on
+inputchoice_add "ssh" "Secure Shell (SSH)" on
+inputchoice_add "kubernets" "Kubernets" on
+inputchoice_add "guacenc" "Guacamole video encoder" on
+inputchoice_add "webp" "WebP" on
+inputchoice_add "audio" "Experimental audio support" off
+
+GUACAMOLE_OPTIONAL_SELECTED=$(inputchoice_show "Itens opcionais de suporte" "Selecione os itens opcionais que serão suportados pelo Guacamole:" "" 25 78 14)
+
+for selected in $GUACAMOLE_OPTIONAL_SELECTED; do
+    sel=$(echo "$selected" | tr -d '"')
+    echo "selecionado: ${sel}"
+    GUACAMOLE_DEPENDENCIES+=" "
+    GUACAMOLE_DEPENDENCIES+=$(echo "$GUACAMOLE_OPTIONAL_LIST"| grep $sel | cut -d"=" -f2)
+done
+
+
+echo "selected: $GUACAMOLE_OPTIONAL_SELECTED"
+
+echo "$GUACAMOLE_DEPENDENCIES"
+
+
+
