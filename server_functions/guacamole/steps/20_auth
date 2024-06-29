@@ -1,0 +1,21 @@
+#!/usr/bin/env bash
+
+. lib/include_default
+
+inputchoice_init
+
+inputchoice_add "simple" "Simple Authentication (user-mapping.xml)" on
+inputchoice_add "duo" "Duo two-factor authentication" off
+inputchoice_add "header" "HTTP header authentication" off
+inputchoice_add "jdbc-mysql" "MySQL/MariaDB database authentication" off
+inputchoice_add "jdbc-postgresql" "PostgreSQL Server" off
+inputchoice_add "jdbc-sqlserver" "SQL Server" off
+inputchoice_add "ldap" "LDAP authentication" off
+inputchoice_add "sso-openid" "OpenID Connect Authentication" off
+inputchoice_add "sso-cas" "CAS Authentication" off
+inputchoice_add "sso-saml" "SAML Authentication" off
+inputchoice_add "totp" "TOTP two-factor authentication" off
+inputchoice_add "radius" "RADIUS Authentication" off
+inputchoice_add "quickconnect" "Ad-hoc Connections" off
+
+GUACAMOLE_AUTH_SELECTED=$(inputchoice_show "$LABEL_AUTH_METHOD" "$LABEL_AUTH_METHOD_DESCRIPTION" "" 25 78 14)

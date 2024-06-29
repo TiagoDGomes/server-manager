@@ -8,7 +8,7 @@ export DEBIAN_FRONTEND=noninteractive
 apt install -y $GUACAMOLE_DEPENDENCIES
 
 if [ $? != 0 ]; then
-    shw_err "apt-get failed to install all required dependencies."
+    shw_err "apt-get failed to install all required dependencies!"
     exit 1
 fi
 
@@ -42,11 +42,17 @@ if [ "$GUACAMOLE_INSTALL_MODE" == "Native" ]; then
     mkdir -v /etc/guacamole
     mkdir -v /etc/guacamole/{lib,extensions}
 
-    echo "[server]" >> /etc/guacamole/guacd.conf
+    echo "[server]" > /etc/guacamole/guacd.conf
     echo "bind_host = 0.0.0.0" >> /etc/guacamole/guacd.conf
     echo "bind_port = 4822" >> /etc/guacamole/guacd.conf
 
-
+    for auth_extension in $GUACAMOLE_AUTH_SELECTED; do
+        if [[ "$auth_extension" == "simple" ]]; then
+            echo "<user-mapping><authorize></authorize></user-mapping>" > /etc/guacamole/user-mapping.xml
+        else             
+            shw_warn "!!! TO-DO wget $auth_extension !!!" # wget "https://apache.org/dyn/closer.lua/guacamole/$GUACAMOLE_CURRENT_VERSION/binary/guacamole-auth-$auth_extension-$GUACAMOLE_CURRENT_VERSION.tar.gz?action=download" -O /tmp/guacamole-auth-$auth_extension-$GUACAMOLE_CURRENT_VERSION.tar.gz
+        fi        
+    done
 
 
     # Configure startup
