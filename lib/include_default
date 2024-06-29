@@ -116,4 +116,23 @@ inputmenu_add(){
     _inputmenu_choice+=("$1")
     _inputmenu_choice+=("$2")
 }
+confirmbox(){
+    whiptail --yesno --backtitle "$3" \
+              --title "$1" \
+               "$2" $4 $5
+}
 
+
+inputchoice_init(){
+    _input_choice=()
+}
+inputchoice_add(){
+    _input_choice+=("$1")
+    _input_choice+=("$2")
+    _input_choice+=("$3")
+}
+inputchoice_show(){
+    whiptail --title "$1" \
+                --checklist "\n$2\n\n" $4 $5 $6 "${_input_choice[@]}" \
+                --backtitle "$3" 3>&1 1>&2 2>&3 
+}
