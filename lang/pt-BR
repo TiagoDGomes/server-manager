@@ -46,3 +46,14 @@ LABEL_AD_DS_DNS_BACKEND="Selecione o backend para DNS:"
 
 LABEL_DHCP="Servidor DHCP"
 LABEL_DHCP_IPV6_SUPPORT="Ativar suporte a IPv6 para $LABEL_DHCP?"
+
+
+LABEL_AUTH_METHOD="Métodos de autenticação"
+LABEL_AUTH_METHOD_DESCRIPTION="Selecione as formas de autenticação que serão suportados:"
+
+LABEL_OPTIONAL_ITEMS="Itens opcionais de suporte"
+LABEL_OPTIONAL_ITEMS_DESCRIPTION="Selecione os itens opcionais que serão suportados:"
+
+
+LABEL_INSTALL_MODE="Modo de instalação"
+LABEL_INSTALL_MODE_DESCRIPTION="Selecione o modo de instalação:"

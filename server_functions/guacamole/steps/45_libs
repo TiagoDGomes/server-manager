@@ -4,7 +4,6 @@
 
 
 
-GUACAMOLE_DEPENDENCIES="$TOMCAT_VERSION $TOMCAT_VERSION-common $TOMCAT_VERSION-admin $TOMCAT_VERSION-user $TOMCAT_VERSION-examples libcairo2-dev libjpeg62-turbo-dev libpng-dev libtool-bin uuid-dev libossp-uuid-dev wget build-essential"
 
 GUACAMOLE_OPTIONAL_LIST='
 guacenc=libavcodec-dev libavformat-dev libavutil-dev libswscale-dev
@@ -26,17 +25,18 @@ inputchoice_add "guacenc" "Guacamole video encoder" on
 inputchoice_add "webp" "WebP" on
 inputchoice_add "audio" "Experimental audio support" off
 
-GUACAMOLE_OPTIONAL_SELECTED=$(inputchoice_show "Itens opcionais de suporte" "Selecione os itens opcionais que serão suportados pelo Guacamole:" "" 25 78 14)
+GUACAMOLE_OPTIONAL_SELECTED=$(inputchoice_show "$LABEL_OPTIONAL_ITEMS" "$LABEL_OPTIONAL_ITEMS_DESCRIPTION" "" 25 78 14)
 
-for selected in $GUACAMOLE_OPTIONAL_SELECTED; do
-    sel=$(echo "$selected" | tr -d '"')
-    echo "selecionado: ${sel}"
-    GUACAMOLE_DEPENDENCIES+=" "
-    GUACAMOLE_DEPENDENCIES+=$(echo "$GUACAMOLE_OPTIONAL_LIST"| grep $sel | cut -d"=" -f2)
-done
-
-
-echo "selected: $GUACAMOLE_OPTIONAL_SELECTED"
+if [[ "$GUACAMOLE_INSTALL_MODE" == "Native" ]]; then
+    GUACAMOLE_DEPENDENCIES+="$TOMCAT_VERSION $TOMCAT_VERSION-common $TOMCAT_VERSION-admin $TOMCAT_VERSION-user $TOMCAT_VERSION-examples libcairo2-dev libjpeg62-turbo-dev libpng-dev libtool-bin uuid-dev libossp-uuid-dev wget build-essential"
+    for selected in $GUACAMOLE_OPTIONAL_SELECTED; do
+        sel=$(echo "$selected" | tr -d '"')
+        GUACAMOLE_DEPENDENCIES+=" "
+        GUACAMOLE_DEPENDENCIES+=$(echo "$GUACAMOLE_OPTIONAL_LIST"| grep $sel | cut -d"=" -f2)
+    done
+else
+    GUACAMOLE_DEPENDENCIES+=" docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin"
+fi
 
 echo "$GUACAMOLE_DEPENDENCIES"
 

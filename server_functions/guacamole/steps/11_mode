@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+
+. lib/include_default
+
+inputmenu_init
+
+inputmenu_add "Native" "version"
+inputmenu_add "Docker" "version"
+
+GUACAMOLE_INSTALL_MODE=$(inputmenu_show "$LABEL_INSTALL_MODE" "$LABEL_INSTALL_MODE_DESCRIPTION" "" 25 78 14)

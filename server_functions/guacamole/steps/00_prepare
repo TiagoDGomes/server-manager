@@ -2,8 +2,14 @@
 
 . lib/include_default
 
+GUACAMOLE_INSTALLED=$(which guacd | wc -c)
 
+# if [ "$GUACAMOLE_INSTALLED" != 0 ]; then
+#     whiptail --msgbox "\n$LABEL_ALREADY_INSTALLED" --title "Apache Guacamole" 10 40 3
+#     exit
+# fi
 
+GUACAMOLE_DEPENDENCIES=""
 
 GUACAMOLE_CURRENT_VERSION="1.5.5"
 
