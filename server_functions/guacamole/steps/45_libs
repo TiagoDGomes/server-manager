@@ -4,7 +4,7 @@
 
 
 
-GUACAMOLE_DEPENDENCIES="$TOMCAT_VERSION $TOMCAT_VERSION-common $TOMCAT_VERSION-admin $TOMCAT_VERSION-user $TOMCAT_VERSION-examples libcairo2-dev libjpeg62-turbo-dev libpng-dev libtool-bin uuid-dev libossp-uuid-dev wget make"
+GUACAMOLE_DEPENDENCIES="$TOMCAT_VERSION $TOMCAT_VERSION-common $TOMCAT_VERSION-admin $TOMCAT_VERSION-user $TOMCAT_VERSION-examples libcairo2-dev libjpeg62-turbo-dev libpng-dev libtool-bin uuid-dev libossp-uuid-dev wget build-essential"
 
 GUACAMOLE_OPTIONAL_LIST='
 guacenc=libavcodec-dev libavformat-dev libavutil-dev libswscale-dev
